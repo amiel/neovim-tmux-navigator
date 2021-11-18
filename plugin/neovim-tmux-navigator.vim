@@ -39,9 +39,11 @@ endfunction
 function! s:initRpc()
   if s:jobId == 0
     let jobid = jobstart([s:bin], { 'rpc': v:true })
+    echo "neovim-tmux-navigator: started rpc process"
     return jobid
   else
     echo "neovim-tmux-navigator: already started"
+    s:initRpc
     return s:jobId
   endif
 endfunction
