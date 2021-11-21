@@ -1,5 +1,6 @@
 use std::process::Command;
 
+use clap::ArgMatches;
 use neovim_lib::{Neovim, NeovimApi, Session};
 
 enum Message {
@@ -29,9 +30,15 @@ pub struct EventHandler {
 }
 
 impl EventHandler {
-    pub fn new(nvim_socket: String, tmux_socket: Option<String>) -> EventHandler {
+    pub fn new(sub_args: &ArgMatches) -> EventHandler {
         let session = Session::new_parent().unwrap();
         let nvim = Neovim::new(session);
+
+        let nvim_socket = sub_args
+            .value_of("nvim-listen-address")
+            .unwrap()
+            .to_string();
+        let tmux_socket = sub_args.value_of("tmux-socket").map(|s| s.to_string());
 
         EventHandler {
             nvim,

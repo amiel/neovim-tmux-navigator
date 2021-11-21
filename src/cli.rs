@@ -26,9 +26,14 @@ pub fn build_cli() -> App<'static, 'static> {
                         .help("Move right (implies client mode)")
                         .conflicts_with_all(&["up", "down", "left"]),
                     Arg::with_name("tmux-socket")
+                        .required(true)
                         .long("tmux-socket")
                         .env("TMUX")
                         .help("TMUX socket"),
+                    Arg::with_name("nvim-listen-address")
+                        .long("nvim-listen-address")
+                        .env("NVIM_LISTEN_ADDRESS")
+                        .help("Unix socket to connect to neovim (implies server mode)"),
                 ]),
             SubCommand::with_name("server")
                 .about("Run as a subprocess of neovim")
