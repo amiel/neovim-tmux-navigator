@@ -1,0 +1,86 @@
+use std::process::Command;
+
+use neovim_lib::{Neovim, NeovimApi, Session};
+
+enum Message {
+    Up,
+    Down,
+    Left,
+    Right,
+    Unknown(String),
+}
+
+impl From<String> for Message {
+    fn from(event: String) -> Self {
+        match &event[..] {
+            "up" => Message::Up,
+            "down" => Message::Down,
+            "left" => Message::Left,
+            "right" => Message::Right,
+            _ => Message::Unknown(event),
+        }
+    }
+}
+
+pub struct EventHandler {
+    nvim: Neovim,
+    nvim_socket: String,
+    tmux_socket: Option<String>,
+}
+
+impl EventHandler {
+    pub fn new(nvim_socket: String, tmux_socket: Option<String>) -> EventHandler {
+        let session = Session::new_parent().unwrap();
+        let nvim = Neovim::new(session);
+
+        EventHandler {
+            nvim,
+            nvim_socket,
+            tmux_socket,
+        }
+    }
+
+    fn setup(&mut self) {
+        self.nvim
+            .command("echo \"neovim-tmux-navigator EventHandler\"")
+            .unwrap();
+
+        if let Some(value) = self.tmux_socket.clone() {
+            self.nvim
+                .command(&format!("echo \"in tmux: {}\"", value))
+                .unwrap();
+
+            Command::new("tmux")
+                .args(&[
+                    "set-option",
+                    "-w",
+                    "@nvim-listen-address",
+                    &self.nvim_socket,
+                ])
+                .spawn()
+                .unwrap();
+        }
+    }
+
+    pub fn recv(&mut self) {
+        let receiver = self.nvim.session.start_event_loop_channel();
+
+        self.setup();
+
+        for (event, _values) in receiver {
+            match Message::from(event) {
+                Message::Up => {}
+                Message::Down => {}
+                Message::Left => {}
+                Message::Right => {}
+
+                // Handle anything else
+                Message::Unknown(event) => {
+                    self.nvim
+                        .command(&format!("echo \"Unknown command: {}\"", event))
+                        .unwrap();
+                }
+            }
+        }
+    }
+}

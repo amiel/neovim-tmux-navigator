@@ -3,8 +3,10 @@ name = "neovim-tmux-navigator"
 version = "0.1.0"
 authors = ["Amiel Martin <amiel.martin@gmail.com>"]
 edition = "2018"
+description = "Coordinates navigation between tmux and neovim"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 neovim-lib = "0.6.0"
+clap = "2.33.3"
