@@ -1,5 +1,5 @@
 use clap::{app_from_crate, crate_authors, crate_description, crate_name, crate_version};
-use clap::{App, AppSettings, Arg, SubCommand};
+use clap::{App, AppSettings, Arg, ArgGroup, SubCommand};
 
 pub fn build_cli() -> App<'static, 'static> {
     app_from_crate!()
@@ -9,22 +9,10 @@ pub fn build_cli() -> App<'static, 'static> {
             SubCommand::with_name("client")
                 .about("Run from tmux to control neovim")
                 .args(&[
-                    Arg::with_name("up")
-                        .short("U")
-                        .help("Move up (implies client mode)")
-                        .conflicts_with_all(&["down", "left", "right"]),
-                    Arg::with_name("down")
-                        .short("D")
-                        .help("Move down (implies client mode)")
-                        .conflicts_with_all(&["up", "left", "right"]),
-                    Arg::with_name("left")
-                        .short("L")
-                        .help("Move left (implies client mode)")
-                        .conflicts_with_all(&["up", "down", "right"]),
-                    Arg::with_name("right")
-                        .short("R")
-                        .help("Move right (implies client mode)")
-                        .conflicts_with_all(&["up", "down", "left"]),
+                    Arg::with_name("up").short("U").help("Move up"),
+                    Arg::with_name("down").short("D").help("Move down"),
+                    Arg::with_name("left").short("L").help("Move left"),
+                    Arg::with_name("right").short("R").help("Move right"),
                     Arg::with_name("tmux-socket")
                         .required(true)
                         .long("tmux-socket")
@@ -33,8 +21,13 @@ pub fn build_cli() -> App<'static, 'static> {
                     Arg::with_name("nvim-listen-address")
                         .long("nvim-listen-address")
                         .env("NVIM_LISTEN_ADDRESS")
-                        .help("Unix socket to connect to neovim (implies server mode)"),
-                ]),
+                        .help("Unix socket to connect to neovim"),
+                ])
+                .group(
+                    ArgGroup::with_name("movement")
+                        .args(&["up", "down", "left", "right"])
+                        .required(true),
+                ),
             SubCommand::with_name("server")
                 .about("Run as a subprocess of neovim")
                 .args(&[
@@ -42,7 +35,7 @@ pub fn build_cli() -> App<'static, 'static> {
                         .required(true)
                         .long("nvim-listen-address")
                         .env("NVIM_LISTEN_ADDRESS")
-                        .help("Unix socket to connect to neovim (implies server mode)"),
+                        .help("Unix socket to connect to neovim"),
                     Arg::with_name("tmux-socket")
                         .long("tmux-socket")
                         .env("TMUX")
