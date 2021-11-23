@@ -5,7 +5,7 @@ use neovim_lib::{Neovim, NeovimApi, Session};
 
 use crate::tmux_util;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 enum Movement {
     Up,
     Down,
@@ -65,20 +65,14 @@ impl Handler {
     pub fn call(&mut self) {
         let _receiver = self.nvim.session.start_event_loop();
 
-        if let Some(_) = self.tmux_socket {
+        if self.tmux_socket.is_some() {
             if self.is_vim() {
-                self.nvim
-                    .command("echo \"is vim - window: \" . winnr()")
-                    .unwrap();
+                self.move_in_vim();
             } else {
-                self.nvim
-                    .command("echo \"not vim - window: \" . winnr()")
-                    .unwrap();
+                self.move_in_tmux();
             }
         } else {
-            self.nvim
-                .command("echo \"not tmux - window: \" . winnr()")
-                .unwrap();
+            self.move_in_vim();
         }
     }
 
@@ -95,5 +89,65 @@ impl Handler {
             .expect("Failed to check for vim");
 
         is_vim_status.success()
+    }
+
+    fn move_in_tmux(&self) {
+        // TODO: Zoom, move windows?
+        let pane_info = tmux_util::get_pane_info().expect("Could not get pane info");
+
+        if pane_info.is_top() && self.movement == Movement::Up {
+            tmux_util::zoom();
+        } else if pane_info.is_bottom() && self.movement == Movement::Down {
+            tmux_util::zoom();
+        } else if pane_info.is_left() && self.movement == Movement::Left {
+            tmux_util::run(&["select-window", "-p"])
+        } else if pane_info.is_right() && self.movement == Movement::Right {
+            tmux_util::run(&["select-window", "-n"])
+        } else {
+            tmux_util::move_direction(self.tmux_movement());
+        }
+    }
+
+    fn move_in_vim(&mut self) {
+        let win_before = self.vim_window();
+
+        self.nvim
+            .command(format!("wincmd {}", self.vim_movement()).as_str())
+            .unwrap();
+
+        let win_after = self.vim_window();
+
+        // If we did not end up moving, then we need to go back to tmux
+        if win_after == win_before {
+            if self.tmux_socket.is_some() {
+                self.move_in_tmux();
+            }
+        }
+    }
+
+    fn vim_window(&mut self) -> neovim_lib::neovim_api::Window {
+        self.nvim
+            .get_current_win()
+            .expect("could not get current window")
+    }
+
+    fn vim_movement(&self) -> &str {
+        match self.movement {
+            Movement::Up => "k",
+            Movement::Down => "j",
+            Movement::Left => "h",
+            Movement::Right => "l",
+            _ => panic!("Cannot move unknown direction"),
+        }
+    }
+
+    fn tmux_movement(&self) -> &str {
+        match self.movement {
+            Movement::Up => "-U",
+            Movement::Down => "-D",
+            Movement::Left => "-L",
+            Movement::Right => "-R",
+            _ => panic!("Cannot move unknown direction"),
+        }
     }
 }

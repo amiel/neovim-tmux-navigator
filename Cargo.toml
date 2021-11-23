@@ -10,3 +10,4 @@ description = "Coordinates navigation between tmux and neovim"
 [dependencies]
 neovim-lib = "0.6.0"
 clap = "2.33.3"
+regex = "1"
