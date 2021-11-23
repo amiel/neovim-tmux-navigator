@@ -5,11 +5,11 @@ use regex::Regex;
 pub fn get_value(name: &str) -> String {
     let message = format!("#{{{}}}", name);
 
-    get_command_result(&["display-message", "-p", &message])
+    get_command_result(&["display-message", "-p", &message]).unwrap_or("".to_string())
 }
 
 // TODO: Resolve every single unwrap
-pub fn get_option(name: &str) -> String {
+pub fn get_option(name: &str) -> Option<String> {
     get_command_result(&["show-option", "-w", "-v", name])
 }
 
@@ -31,15 +31,20 @@ pub fn run(args: &[&str]) {
 }
 
 // TODO: Resolve every single unwrap
-pub fn get_command_result(args: &[&str]) -> String {
-    let output = Command::new("tmux").args(args).output().unwrap();
+pub fn get_command_result(args: &[&str]) -> Option<String> {
+    let output = Command::new("tmux")
+        .args(args)
+        .output()
+        .expect("Could not run tmux command");
 
-    let value = std::str::from_utf8(&output.stdout)
-        .unwrap()
-        .strip_suffix("\n")
-        .unwrap();
+    let mut value = String::from_utf8_lossy(&output.stdout);
+    let value = value.to_mut();
 
-    value.to_string()
+    if value.ends_with('\n') {
+        value.pop();
+    }
+
+    Some(value.to_string())
 }
 
 #[derive(Debug)]

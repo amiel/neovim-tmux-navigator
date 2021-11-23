@@ -15,32 +15,27 @@ enum Movement {
 }
 
 pub struct Handler {
-    nvim: Neovim,
+    nvim_socket: Option<String>,
     tmux_socket: Option<String>,
     movement: Movement,
 }
 
-fn build_session(nvim_socket: &str) -> Neovim {
-    let session = Session::new_unix_socket(nvim_socket).unwrap();
+fn build_session(nvim_socket: String) -> Neovim {
+    let session = Session::new_unix_socket(nvim_socket.as_str()).unwrap();
     Neovim::new(session)
 }
 
-fn make_session(maybe_address: Option<&str>) -> Neovim {
+fn get_nvim_socket(maybe_address: Option<&str>) -> Option<String> {
     match maybe_address {
-        Some(value) => build_session(value),
-        None => {
-            let value = tmux_util::get_option("@nvim-listen-address");
-
-            build_session(value.as_str())
-        }
+        Some(value) => Some(value.to_string()),
+        None => tmux_util::get_option("@nvim-listen-address"),
     }
 }
 
 impl Handler {
     pub fn new(sub_args: &ArgMatches) -> Handler {
         let tmux_socket = sub_args.value_of("tmux-socket").map(|s| s.to_string());
-
-        let nvim = make_session(sub_args.value_of("nvim-listen-address"));
+        let nvim_socket = get_nvim_socket(sub_args.value_of("nvim-listen-address"));
 
         // TODO: Implement From?
         let movement = if sub_args.is_present("up") {
@@ -56,27 +51,34 @@ impl Handler {
         };
 
         Handler {
-            nvim,
+            nvim_socket,
             tmux_socket,
             movement,
         }
     }
 
-    pub fn call(&mut self) {
-        let _receiver = self.nvim.session.start_event_loop();
-
+    pub fn call(&self) {
         if self.tmux_socket.is_some() {
             if self.is_vim() {
-                self.move_in_vim();
+                let mut nvim = build_session(self.nvim_socket.clone().unwrap());
+
+                nvim.session.start_event_loop();
+
+                self.move_in_vim(nvim);
             } else {
                 self.move_in_tmux();
             }
         } else {
-            self.move_in_vim();
+            panic!("Moving in vim without tmux is not yet implemented");
+            // self.move_in_vim();
         }
     }
 
     fn is_vim(&self) -> bool {
+        if self.nvim_socket.is_none() {
+            return false;
+        }
+
         let tmux_pane_tty = tmux_util::get_value("pane_tty");
 
         // This command taken from https://github.com/christoomey/vim-tmux-navigator/commit/57701ac650990010ea97b1b4d64779d0b60c769b#diff-04c6e90faac2675aa89e2176d2eec7d8
@@ -108,14 +110,13 @@ impl Handler {
         }
     }
 
-    fn move_in_vim(&mut self) {
-        let win_before = self.vim_window();
+    fn move_in_vim(&self, mut nvim: Neovim) {
+        let win_before = self.vim_window(&mut nvim);
 
-        self.nvim
-            .command(format!("wincmd {}", self.vim_movement()).as_str())
+        nvim.command(format!("wincmd {}", self.vim_movement()).as_str())
             .unwrap();
 
-        let win_after = self.vim_window();
+        let win_after = self.vim_window(&mut nvim);
 
         // If we did not end up moving, then we need to go back to tmux
         if win_after == win_before {
@@ -125,9 +126,8 @@ impl Handler {
         }
     }
 
-    fn vim_window(&mut self) -> neovim_lib::neovim_api::Window {
-        self.nvim
-            .get_current_win()
+    fn vim_window(&self, nvim: &mut Neovim) -> neovim_lib::neovim_api::Window {
+        nvim.get_current_win()
             .expect("could not get current window")
     }
 
