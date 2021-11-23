@@ -1,6 +1,7 @@
 mod cli;
 mod neovim_server;
 mod tmux_client;
+mod tmux_util;
 
 fn main() {
     let args = cli::build_cli().get_matches();

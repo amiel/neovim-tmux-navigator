@@ -3,6 +3,8 @@ use std::process::Command;
 use clap::ArgMatches;
 use neovim_lib::{Neovim, NeovimApi, Session};
 
+use crate::tmux_util;
+
 #[derive(Debug)]
 enum Movement {
     Up,
@@ -27,18 +29,9 @@ fn make_session(maybe_address: Option<&str>) -> Neovim {
     match maybe_address {
         Some(value) => build_session(value),
         None => {
-            // TODO: Use tmux_interface
-            let output = Command::new("tmux")
-                .args(&["show-option", "-w", "-v", "@nvim-listen-address"])
-                .output()
-                .unwrap();
+            let value = tmux_util::get_option("@nvim-listen-address");
 
-            let value = std::str::from_utf8(&output.stdout)
-                .unwrap()
-                .strip_suffix("\n")
-                .unwrap();
-
-            build_session(value)
+            build_session(value.as_str())
         }
     }
 }
@@ -90,18 +83,10 @@ impl Handler {
     }
 
     fn is_vim(&self) -> bool {
-        let output = Command::new("tmux")
-            .args(&["display-message", "-p", "#{pane_tty}"])
-            .output()
-            .unwrap();
-
-        let value = std::str::from_utf8(&output.stdout)
-            .unwrap()
-            .strip_suffix("\n")
-            .unwrap();
+        let tmux_pane_tty = tmux_util::get_value("pane_tty");
 
         // This command taken from https://github.com/christoomey/vim-tmux-navigator/commit/57701ac650990010ea97b1b4d64779d0b60c769b#diff-04c6e90faac2675aa89e2176d2eec7d8
-        let c = &format!("ps -o state= -o comm= -t '{}' | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(view|n?vim?x?)(diff)?$'", value);
+        let c = &format!("ps -o state= -o comm= -t '{}' | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(view|n?vim?x?)(diff)?$'", tmux_pane_tty);
 
         let is_vim_status = Command::new("sh")
             .arg("-c")

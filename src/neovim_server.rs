@@ -1,7 +1,7 @@
-use std::process::Command;
-
 use clap::ArgMatches;
 use neovim_lib::{Neovim, NeovimApi, Session};
+
+use crate::tmux_util;
 
 enum Message {
     Up,
@@ -57,15 +57,7 @@ impl EventHandler {
                 .command(&format!("echo \"in tmux: {}\"", value))
                 .unwrap();
 
-            Command::new("tmux")
-                .args(&[
-                    "set-option",
-                    "-w",
-                    "@nvim-listen-address",
-                    &self.nvim_socket,
-                ])
-                .spawn()
-                .unwrap();
+            tmux_util::set_option("@nvim-listen-address", &self.nvim_socket);
         }
     }
 
