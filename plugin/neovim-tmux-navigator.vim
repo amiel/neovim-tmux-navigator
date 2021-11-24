@@ -10,7 +10,7 @@ let s:Left = 'left'
 let s:Right = 'right'
 
 " The path to the binary that was created out of 'cargo build' or 'cargo build --release". This will generally be 'target/release/name'
-let s:command = ['/Users/amiel/src/neovim-tmux-navigator/target/debug/neovim-tmux-navigator', 'server']
+let s:command = ['neovim-tmux-navigator', 'server']
 
 " Entry point. Initialize RPC. If it succeeds, then attach commands to the `rpcnotify` invocations.
 function! s:connect()
@@ -28,6 +28,7 @@ function! s:connect()
   endif
 endfunction
 
+" NOTE: These are not used yet"
 function! s:configureCommands()
   command! NvimTmuxNavigatorUp :call rpcnotify(s:jobId, s:Up)
   command! NvimTmuxNavigatorDown :call rpcnotify(s:jobId, s:Down)
@@ -39,10 +40,10 @@ endfunction
 function! s:initRpc()
   if s:jobId == 0
     let jobid = jobstart(s:command, { 'rpc': v:true })
-    echo "neovim-tmux-navigator: started rpc process"
+"     echo "neovim-tmux-navigator: started rpc process"
     return jobid
   else
-    echo "neovim-tmux-navigator: already started"
+"     echo "neovim-tmux-navigator: already started"
     s:initRpc
     return s:jobId
   endif

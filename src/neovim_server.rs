@@ -48,15 +48,7 @@ impl EventHandler {
     }
 
     fn setup(&mut self) {
-        self.nvim
-            .command("echo \"neovim-tmux-navigator EventHandler\"")
-            .unwrap();
-
-        if let Some(value) = self.tmux_socket.clone() {
-            self.nvim
-                .command(&format!("echo \"in tmux: {}\"", value))
-                .unwrap();
-
+        if self.tmux_socket.is_some() {
             tmux_util::set_option("@nvim-listen-address", &self.nvim_socket);
         }
     }
