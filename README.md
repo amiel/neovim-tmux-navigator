@@ -6,9 +6,17 @@ Use `C-<hjkl>` to navigate left, down, up, right, respectively. neovim-tmux-navi
 
 ## Installation
 
+Make sure `$HOME/.cargo/bin` is in your PATH.
+
 ### Nvim plugin
 
 Add `amiel/neovim-tmux-navigator` to your vim plugins, however you like.
+
+Some plugin managers allow running a post-install hook. For example, with packer:
+
+```
+{"amiel/neovim-tmux-navigator", run = "cargo install --path ."},
+```
 
 ### Building tool
 
@@ -17,8 +25,6 @@ For now, a rust toolchain is required to build.
 ```
 cargo install --path /path/to/neovim-tmux-navigator
 ```
-
-And make sure `$HOME/.cargo/bin` is in your PATH.
 
 ### Tmux
 
