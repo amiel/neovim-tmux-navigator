@@ -72,7 +72,7 @@ pub fn get_pane_info() -> Result<PaneInfo, Box<dyn std::error::Error>> {
 
     let window = get_window_info()?;
 
-    let re = Regex::new(&format!(r"\d+x\d+,(\d+),(\d+),{}[^\d]", id))?;
+    let re = Regex::new(&format!(r"\d+x\d+,(\d+),(\d+),{}\b", id))?;
 
     let caps = re.captures(&window.layout).unwrap();
 
