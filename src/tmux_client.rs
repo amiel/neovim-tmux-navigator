@@ -21,7 +21,8 @@ pub struct Handler {
 }
 
 fn build_session(nvim_socket: String) -> Neovim {
-    let session = Session::new_unix_socket(nvim_socket.as_str()).unwrap();
+    let session = Session::new_unix_socket(nvim_socket.as_str())
+        .expect(format!("Couldn't find NVIM socket {}", nvim_socket.as_str()).as_str());
     Neovim::new(session)
 }
 
@@ -60,7 +61,11 @@ impl Handler {
     pub fn call(&self) {
         if self.tmux_socket.is_some() {
             if self.is_vim() {
-                let mut nvim = build_session(self.nvim_socket.clone().unwrap());
+                let mut nvim = build_session(
+                    self.nvim_socket
+                        .clone()
+                        .expect("Could not clone nvim socket"),
+                );
 
                 nvim.session.start_event_loop();
 

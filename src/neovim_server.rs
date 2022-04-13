@@ -34,6 +34,9 @@ impl EventHandler {
         let session = Session::new_parent().unwrap();
         let nvim = Neovim::new(session);
 
+        // nvim.set_client_info("neovim-tmux-navigator", vec![], "plugin", vec![], vec![])
+        //     .expect("Could not set client info");
+
         let nvim_socket = sub_args
             .value_of("nvim-listen-address")
             .unwrap()
@@ -69,7 +72,7 @@ impl EventHandler {
                 Message::Unknown(event) => {
                     self.nvim
                         .command(&format!("echo \"Unknown command: {}\"", event))
-                        .unwrap();
+                        .expect("Unknown command from neovim");
                 }
             }
         }
