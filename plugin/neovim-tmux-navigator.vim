@@ -36,15 +36,27 @@ function! s:configureCommands()
   command! NvimTmuxNavigatorRight :call rpcnotify(s:jobId, s:Right)
 endfunction
 
+function! s:OnExit(job_id, data, event) dict
+  lua require("notify")("neovim-tmux-navigator on exit")
+  echo "neovim-tmux-navigator: rpc process stopped: id=" .. a:job_id .. " event=" .. a:event .. " -- " .. string(a:data)
+endfunction
+
+function! s:OnError(job_id, data, event) dict
+  lua require("notify")("neovim-tmux-navigator on error")
+  echo "neovim-tmux-navigator: rpc process on error: id=" .. a:job_id .. " event=" .. a:event .. " -- " .. string(a:data)
+endfunction
+
+
 " Initialize RPC
 function! s:initRpc()
   if s:jobId == 0
-    let jobid = jobstart(s:command, { 'rpc': v:true })
+    let jobid = jobstart(s:command, { 'rpc': v:true, 'on_exit': function('s:OnExit'), 'on_stderr': function('s:OnError') })
     echo "neovim-tmux-navigator: started rpc process"
+    let g:jobId = jobid
     return jobid
   else
+    lua require("notify")("neovim-tmux-navigator: process already started")
     echo "neovim-tmux-navigator: already started"
-    " s:initRpc
     return s:jobId
   endif
 endfunction
