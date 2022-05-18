@@ -107,9 +107,11 @@ impl Handler {
         } else if pane_info.is_bottom() && self.movement == Movement::Down {
             tmux_util::zoom();
         } else if pane_info.is_left() && self.movement == Movement::Left {
-            tmux_util::run(&["select-window", "-p"])
+            tmux_util::zoom();
+            // tmux_util::run(&["select-window", "-p"])
         } else if pane_info.is_right() && self.movement == Movement::Right {
-            tmux_util::run(&["select-window", "-n"])
+            tmux_util::zoom();
+            // tmux_util::run(&["select-window", "-n"])
         } else {
             tmux_util::move_direction(self.tmux_movement());
         }
