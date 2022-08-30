@@ -31,7 +31,7 @@ pub struct EventHandler {
 
 impl EventHandler {
     pub fn new(sub_args: &ArgMatches) -> EventHandler {
-        let session = Session::new_parent().unwrap();
+        let session = Session::new_parent().expect("Could not get a parent nvim session");
         let nvim = Neovim::new(session);
 
         // nvim.set_client_info("neovim-tmux-navigator", vec![], "plugin", vec![], vec![])
@@ -39,8 +39,9 @@ impl EventHandler {
 
         let nvim_socket = sub_args
             .value_of("nvim-listen-address")
-            .unwrap()
+            .expect("No nvim listen address")
             .to_string();
+
         let tmux_socket = sub_args.value_of("tmux-socket").map(|s| s.to_string());
 
         EventHandler {

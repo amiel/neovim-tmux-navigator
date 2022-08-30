@@ -20,7 +20,7 @@ pub fn build_cli() -> App<'static, 'static> {
                         .help("TMUX socket"),
                     Arg::with_name("nvim-listen-address")
                         .long("nvim-listen-address")
-                        .env("NVIM_LISTEN_ADDRESS")
+                        .env("NVIM")
                         .help("Unix socket to connect to neovim"),
                 ])
                 .group(
@@ -34,7 +34,7 @@ pub fn build_cli() -> App<'static, 'static> {
                     Arg::with_name("nvim-listen-address")
                         .required(true)
                         .long("nvim-listen-address")
-                        .env("NVIM_LISTEN_ADDRESS")
+                        .env("NVIM")
                         .help("Unix socket to connect to neovim"),
                     Arg::with_name("tmux-socket")
                         .long("tmux-socket")
